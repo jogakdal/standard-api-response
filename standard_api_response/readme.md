@@ -360,7 +360,7 @@ async def test_page_list(start_api_server):
 ## 응답 필드 변환
 ### `ResponseKeyConverter` 클래스
 - ResponseKeyConverter 클래스를 사용하면 응답을 생성할 때나 응답을 모델로 매핑할 때 필드명이나 필드명의 케이스 컨벤션을 변환할 수 있습니다.
-- 상세 설명은 `convertable-key-model-readme.md` 파일을 참조하십시오.
+- 상세 설명은 <a href="https://github.com/jogakdal/standard-api-response/blob/main/convertable_key_model/readme.md">convertable-key-model-readme.md 파일</a>을 참조하십시오.
 
 ## 응답 필드 변환 예제
 ```python

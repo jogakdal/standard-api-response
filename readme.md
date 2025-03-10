@@ -7,7 +7,7 @@ cd <repository-directory>
 pip install -r requirements.txt
 ```
 
-## pypl 등록
+### pypl 등록
 각 패키지 디렉토리에서 다음 명령 수행.
 ```sh
 python setup.py sdist bdist_wheel
@@ -15,4 +15,8 @@ pip install twine
 twine check dist/*. # for check
 twine upload dist/*
 ```
-
+## Module Manual
+### standard-api.response: 
+https://github.com/jogakdal/standard-api-response/blob/main/standard_api_response/readme.md
+### convertable-key-model: 
+https://github.com/jogakdal/standard-api-response/blob/main/convertable_key_model/readme.md
