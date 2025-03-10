@@ -5,7 +5,7 @@ with open("readme.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='standard-api-response',
-    version='1.3.0',
+    version='1.3.1',
     author='황용호',
     author_email='jogakdal@gmail.com',
     description='Standard API response helper package',

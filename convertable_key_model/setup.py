@@ -5,7 +5,7 @@ with open("readme.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='convertable-key-model',
-    version='1.0.0',
+    version='1.0.1',
     author='황용호',
     author_email='jogakdal@gmail.com',
     description='ConvertableKeyModel: Dynamic key conversion for Pydantic models',
