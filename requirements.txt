@@ -12,12 +12,16 @@ anyio==3.7.1
     # via
     #   fastapi
     #   starlette
+click==8.1.8
+    # via uvicorn
 exceptiongroup==1.2.2
     # via anyio
 expiringdict==1.2.2
     # via advanced-python-singleton
 fastapi==0.103.2
     # via -r requirements.in
+h11==0.14.0
+    # via uvicorn
 idna==3.10
     # via anyio
 inflection==0.5.1
@@ -38,3 +42,6 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   starlette
+    #   uvicorn
+uvicorn==0.34.0
+    # via -r requirements.in

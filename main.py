@@ -2,11 +2,38 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.params import Query, Path
 
-from standard_api_response.standard_response import StandardResponse
-from src.service.sample_service import SampleService
+from src.service.sample_service import SampleService, SampleItem
+from convertable_key_model.convertable_key_model import to_camel, CaseConvention, ResponseKeyConverter
+from standard_api_response.standard_response import StandardResponse, ConvertableKeyModel, PageInfo, OrderInfo, Items, \
+    PageableList
 
 app = FastAPI()
 
+class Profile(ConvertableKeyModel):
+    age: int
+
+class User(ConvertableKeyModel):
+    id: int
+    name: str
+    email: str
+    profile: Profile
+
+@app.get("/key_convert")
+def get_user():
+    alias_map = {
+        "id": "user_id",
+        "age": "user_age",
+        "name": "full_name"
+    }
+    return User(
+        id=1,
+        name="황용호",
+        email="jogakdal@gmail.com",
+        profile=Profile(age=30, alias_map={"age": "user_age"}, case_converter=to_camel),
+        alias_map=alias_map,
+        # case_converter=to_camel  # 컨버터 함수를 직접 지정할 수도 있음
+        case_convention=CaseConvention.CAMEL
+    ).convert_key()
 
 @app.get('/item')
 async def sample_item():
@@ -15,7 +42,8 @@ async def sample_item():
         return payload, None, None
 
     sample_service = SampleService()
-    return StandardResponse.build(callback=__lambda)
+    result = StandardResponse.build(callback=__lambda).convert_key()
+    return result
 
 
 @app.get('/page_list/{page}')
@@ -28,7 +56,21 @@ async def sample_page_list(
         return payload, None, None
 
     sample_service = SampleService()
-    return StandardResponse.build(callback=__lambda)
+
+    ResponseKeyConverter().clear()
+    ResponseKeyConverter().add_alias(StandardResponse, 'duration', 'duration_time')
+    ResponseKeyConverter().add_alias(PageInfo, 'current', 'current_page')
+    ResponseKeyConverter().add_alias(PageInfo, 'size', 'page_size')
+    ResponseKeyConverter().add_alias(PageInfo, 'total', 'total_pages')
+    ResponseKeyConverter().add_alias(OrderInfo, 'by', 'order_by')
+    ResponseKeyConverter().add_alias(Items[SampleItem], 'current', 'current_page')
+    ResponseKeyConverter().add_alias(PageableList[SampleItem], 'page', 'page_info')
+    ResponseKeyConverter().set_default_case_convention(CaseConvention.CAMEL)
+
+    result = StandardResponse.build(callback=__lambda).convert_key()
+    ResponseKeyConverter().clear()
+
+    return result
 
 
 @app.get('/page_only/{page}')

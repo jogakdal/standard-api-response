@@ -5,7 +5,7 @@ with open("readme.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='standard-api-response',
-    version='1.2.0',
+    version='1.3.0',
     author='황용호',
     author_email='jogakdal@gmail.com',
     description='Standard API response helper package',
@@ -14,7 +14,7 @@ setup(
     url='https://github.com/jogakdal/standard-api-response',
     install_requires=['pydantic', 'fastapi', 'inflection', 'advanced-python-singleton'],
     packages=find_packages(exclude=[]),
-    keywords=['jogakdal', 'standard', 'API', 'response', 'helper'],
+    keywords=['jogakdal', 'standard', 'API', 'response', 'helper', 'pydantic'],
     python_requires='>=3.6',
     classifiers=[
         'Programming Language :: Python :: 3',

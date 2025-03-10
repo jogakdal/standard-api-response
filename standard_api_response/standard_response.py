@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import http
 from datetime import datetime, timezone
 from enum import Enum
@@ -5,6 +7,7 @@ from typing import TypeVar, Optional, Generic, Any, Union, List
 
 from pydantic import BaseModel, ValidationError
 
+from convertable_key_model.convertable_key_model import ConvertableKeyModel
 from standard_api_response.exception import KeyNotFoundError
 from standard_api_response.time_utility import time_diff
 
@@ -38,8 +41,7 @@ class OrderDirection(Enum):
 
         return OrderDirection.ASC
 
-
-class OrderBy(BaseModel):
+class OrderBy(ConvertableKeyModel):
     """
     정렬에 사용된 필드와 방향 정보.
     payload.{pageable|incremental}.order.by 필드 대응 객체
@@ -49,7 +51,7 @@ class OrderBy(BaseModel):
     direction: OrderDirection = OrderDirection.ASC  # 정렬 방향 (asc, desc)
 
 
-class OrderInfo(BaseModel):
+class OrderInfo(ConvertableKeyModel):
     """
     순서 정보.
     payload.{pageable|incremental}.order 필드 대응 객체
@@ -59,7 +61,7 @@ class OrderInfo(BaseModel):
     by: List[OrderBy]  # 정렬이 적용된 필드와 방향 정보
 
 
-class PageInfo(BaseModel):
+class PageInfo(ConvertableKeyModel):
     """
     페이지 정보.
     payload.pageable.page 필드 대응 객체
@@ -75,7 +77,7 @@ class PageInfo(BaseModel):
         return ((total_items + page_size - 1) // page_size) if page_size > 0 else total_items
 
 
-class Items(BaseModel, Generic[I]):
+class Items(ConvertableKeyModel, Generic[I]):
     """
     아이템 정보
     payload.{pageable|incremental}.items 필드 대응 객체
@@ -95,7 +97,7 @@ class Items(BaseModel, Generic[I]):
         )
 
 
-class _BaseList(BaseModel, Generic[I]):
+class _BaseList(ConvertableKeyModel, Generic[I]):
     """
     PageableList, IncrementalList에서 공통으로 사용하는 필드를 정의한 추상 클래스
     라이브러리 외부에서 직접 사용할 필요가 없다.
@@ -126,7 +128,8 @@ class PageableList(_BaseList, Generic[I]):
             order_info: OrderInfo=None
     ) -> 'PageableList[I]':
         _page_size = page_size if page_size > 0 else 1
-        return PageableList[I](
+
+        result = PageableList[I](
             page=PageInfo(
                 size=_page_size,
                 current=current_page,
@@ -135,9 +138,10 @@ class PageableList(_BaseList, Generic[I]):
             order=order_info,
             items=Items.build(total_items=total_items, items=items)
         )
+        return result
 
 
-class CursorInfo(BaseModel):
+class CursorInfo(ConvertableKeyModel):
     """
     커서 정보
     payload.incremental.cursor 필드 대응 객체
@@ -204,12 +208,12 @@ class IncrementalList(_BaseList, Generic[I]):
         )
 
 
-class ErrorPayload(BaseModel):
+class ErrorPayload(ConvertableKeyModel):
     message: str  # 에러 메시지
     appendix: Optional[dict] = {}  # 추가 정보
 
 
-class StandardResponse(BaseModel):
+class StandardResponse(ConvertableKeyModel):
     """
     표준 응답 객체
     """
@@ -228,7 +232,7 @@ class StandardResponse(BaseModel):
     # callback 함수가 반환한 version이 None이 아니면 StandardResponse 객체의 version 필드에 지정된다.
     # 이는 페이로드 생성 중 발생할 수 있는 오류 코드를 StandardResponse 객체에 반영하기 위함이다.
     @staticmethod
-    def build(payload=None, callback=None, error_code=None, version=None):
+    def build(payload=None, callback=None, error_code=None, version=None) -> StandardResponse:
         _create_time = datetime.now(tz=timezone.utc)
 
         try:
@@ -255,7 +259,7 @@ class StandardResponse(BaseModel):
             raise KeyNotFoundError(f'Key is not found: {e}')
 
     @staticmethod
-    def build_from_response(response: dict):
+    def build_from_response(response: dict) -> StandardResponse:
         try:
             return StandardResponse(
                 code=response.get('code', http.HTTPStatus.OK),

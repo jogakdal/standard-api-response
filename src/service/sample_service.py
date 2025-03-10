@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 
+from convertable_key_model.convertable_key_model import CaseConvention
 from standard_api_response.standard_response \
-    import PageableList, IncrementalList, CursorInfo, OrderBy, OrderDirection, OrderInfo, Items
+    import PageableList, IncrementalList, CursorInfo, OrderBy, OrderDirection, OrderInfo, Items, ConvertableKeyModel
 
 
-class SamplePayload(BaseModel):
+class SamplePayload(ConvertableKeyModel):
     value_1: str
     value_2: int
 
@@ -14,13 +15,13 @@ class SampleItem(BaseModel):
     value: int
 
 
-class SamplePageListPayload(BaseModel):
+class SamplePageListPayload(ConvertableKeyModel):
     value_1: str
     value_2: int
     pageable: PageableList[SampleItem]
 
 
-class SampleIncrementalListPayload(BaseModel):
+class SampleIncrementalListPayload(ConvertableKeyModel):
     value_1: str
     value_2: int
     incremental: IncrementalList[SampleItem]
@@ -33,7 +34,8 @@ class SampleService:
             self.item_list.append(SampleItem(key=f'key_{i}', value=i))
 
     def get_item(self):
-        return SamplePayload(value_1='sample', value_2=0)
+        # return SamplePayload(value_1='sample', value_2=0, case_convention=CaseConvention.SNAKE)
+        return SamplePayload(value_1='sample', value_2=0, case_convention=CaseConvention.CAMEL)
 
     def get_pageable_list(self, page: int, page_size: int):
         # page == 0 이면 모든 데이터 반환
@@ -52,7 +54,7 @@ class SampleService:
         payload = SamplePageListPayload(
             value_1='page_list_sample',
             value_2=0,
-            pageable=page_list.model_dump()  # Pydantic에서 custom model에 대한 직렬화를 수행할 때 dict를 사용하므로 dict로 변환
+            pageable=page_list.convert_key(),  # Pydantic에서 custom model에 대한 직렬화를 수행할 때 dict를 사용하므로 dict로 변환
         )
         return payload
 

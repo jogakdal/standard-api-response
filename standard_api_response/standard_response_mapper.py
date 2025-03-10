@@ -1,8 +1,7 @@
 import http
 from datetime import datetime, timezone
-from typing import Type, Dict, TypeVar
+from typing import Type, Dict, TypeVar, Optional
 
-import inflection
 from advanced_python_singleton.singleton import Singleton
 from pydantic import BaseModel
 
@@ -21,21 +20,12 @@ class StdResponseMapper(metaclass=Singleton):
         self.payload_type = payload_type
         self.response = StdResponseMapper.map_standard_response(response, payload_type)
 
-    @staticmethod
-    def convert_keys_to_snake_case(data):
-        if isinstance(data, dict):
-            return {inflection.underscore(k): StdResponseMapper.convert_keys_to_snake_case(v) for k, v in data.items()}
-        elif isinstance(data, list):
-            return [StdResponseMapper.convert_keys_to_snake_case(item) for item in data]
-        else:
-            return data
-
     # payload를 model로 변환
     # response: 표준화된 response 데이터(jsosn)
     # payload_type: 변환할 model 타입(class 명)
     @staticmethod
-    def map_payload(response: dict, payload_type: Type[P]) -> Type[P]:
-        payload = response.get('payload') if response is not None else None
+    def map_payload(response: dict, payload_type: Type[P], payload_key: str='payload') -> Type[P]:
+        payload = response.get(payload_key) if response is not None else None
         return payload_type.model_validate(payload) if payload is not None else None
 
 
@@ -44,18 +34,18 @@ class StdResponseMapper(metaclass=Singleton):
     # list_type: 변환할 model 타입(현재 PageableList, IncrementalList 두 타입만 지원)
     # list_key: list 데이터가 있는 key 값(기본갑: 'pageable')
     @staticmethod
-    def map_list(payload: dict, list_type: Type[P], list_key: str = 'pageable') -> Type[P]:
+    def map_list(payload: dict, list_type: Type[P], list_key: str='pageable') -> Optional[P]:
         if payload is None:
             return None
 
         return list_type.model_validate(payload.get(list_key, {}))
 
     @staticmethod
-    def map_pageable_list(payload: dict, item_type: Type[P], list_key: str = 'pageable') -> PageableList[P]:
+    def map_pageable_list(payload: dict, item_type: Type[P], list_key: str='pageable') -> PageableList[P]:
         return StdResponseMapper.map_list(payload, PageableList[item_type], list_key)
 
     @staticmethod
-    def map_incremental_list(payload: dict, item_type: Type[P], list_key: str = 'incremental') -> IncrementalList[P]:
+    def map_incremental_list(payload: dict, item_type: Type[P], list_key: str='incremental') -> IncrementalList[P]:
         return StdResponseMapper.map_list(payload, IncrementalList[item_type], list_key)
 
 
