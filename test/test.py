@@ -5,11 +5,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 import main
-from convertable_key_model.convertable_key_model import ConvertableKeyModel, CaseConvention, ResponseKeyConverter
+from convertable_key_model.convertable_key_model.convertable_key_model import ConvertableKeyModel, CaseConvention, ResponseKeyConverter
 from src.service.sample_service import SampleService, SampleItem, SamplePageListPayload, SamplePayload, \
     SampleIncrementalListPayload
-from standard_api_response.standard_api_response import StandardResponse, StdResponseMapper, PageInfo, OrderInfo, Items, \
+from standard_api_response.standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, \
     PageableList, IncrementalList
+from standard_api_response.standard_api_response.standard_response_mapper import StdResponseMapper
 
 client = TestClient(main.app)
 

@@ -2,11 +2,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.params import Query, Path
 
-from convertable_key_model.convertable_key_model import ConvertableKeyModel
+from convertable_key_model.convertable_key_model.convertable_key_model import ConvertableKeyModel
 from convertable_key_model.convertable_key_model.convertable_key_model import to_camel, CaseConvention, \
     ResponseKeyConverter
 from src.service.sample_service import SampleService, SampleItem
-from standard_api_response.standard_api_response import StandardResponse, PageInfo, OrderInfo, Items, PageableList
+from standard_api_response.standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, \
+    Items, PageableList
 
 app = FastAPI()
 

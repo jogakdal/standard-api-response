@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from convertable_key_model.convertable_key_model import ConvertableKeyModel, CaseConvention
-from standard_api_response.standard_api_response import PageableList, IncrementalList, OrderInfo, OrderBy, \
-    OrderDirection, CursorInfo, Items
+from convertable_key_model.convertable_key_model.convertable_key_model import ConvertableKeyModel, CaseConvention
+from standard_api_response.standard_api_response.standard_response import PageableList, IncrementalList, OrderInfo, \
+    OrderBy, OrderDirection, CursorInfo, Items
 
 
 class SamplePayload(ConvertableKeyModel):
