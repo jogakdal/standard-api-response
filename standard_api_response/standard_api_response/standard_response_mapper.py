@@ -1,13 +1,12 @@
 import http
 from datetime import datetime, timezone
-from typing import Type, Dict, TypeVar, Optional
+from typing import Type, Dict, Optional
 
 from advanced_python_singleton.singleton import Singleton
-from pydantic import BaseModel
 
-from standard_api_response.standard_response import StandardResponse, PageableList, IncrementalList, P, _BaseList
+from standard_api_response.standard_api_response import PageableList, IncrementalList, P
+from standard_api_response.standard_api_response.standard_response import _BaseList, StandardResponse
 
-T = TypeVar('T', bound=BaseModel)
 
 class StdResponseMapper(metaclass=Singleton):
     """
@@ -68,7 +67,7 @@ class StdResponseMapper(metaclass=Singleton):
         validated_lists = {}
         for key, value in payload.items():
             validated = check_type(value, PageableList[item_type])
-            if validated == None:
+            if validated is None:
                 validated = check_type(value, IncrementalList[item_type])
             if validated is not None:
                 validated_lists[key] = validated

@@ -118,7 +118,7 @@ ResponseKeyConverter().add_case_convention(MyModel, CaseConvention.CAMEL)
 ---
 ## 4. Serialize/Deserialize 동작 방식
 - **Deserialize (역직렬화):**
-- JSON 데이터의 키가 어떤 케이스로 들어오더라도, alias 매핑 정보를 사용하여 모델의 필드와 올바르게 매핑합니다.
+  - JSON 데이터의 키가 어떤 케이스로 들어오더라도, alias 매핑 정보를 사용하여 모델의 필드와 올바르게 매핑합니다.
   - 이 과정에서는 생성자 인자, 전역 등록, 또는 `__alias_map_reference__` 필드에 의해 alias 매핑이 적용됩니다.
 - **Serialize (직렬화):**
   - 기본적으로 BaseModel의 model_dump() 호출 시에는 alias 매핑이나 케이스 컨벤션 변환이 적용되지 않습니다.

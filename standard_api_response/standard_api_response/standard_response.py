@@ -8,8 +8,8 @@ from typing import TypeVar, Optional, Generic, Any, Union, List
 from pydantic import BaseModel, ValidationError
 
 from convertable_key_model.convertable_key_model import ConvertableKeyModel
-from standard_api_response.exception import KeyNotFoundError
-from standard_api_response.time_utility import time_diff
+from standard_api_response.standard_api_response.exception import KeyNotFoundError
+from standard_api_response.standard_api_response.time_utility import time_diff
 
 P = TypeVar('P', bound=BaseModel)
 I = TypeVar('I', bound=BaseModel)
