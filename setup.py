@@ -5,14 +5,14 @@ with open("readme.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='standard-api-response',
-    version='1.3.4',
+    version='1.3.5',
     author='황용호',
     author_email='jogakdal@gmail.com',
     description='Standard API response helper package',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/jogakdal/standard-api-response',
-    install_requires=['pydantic', 'fastapi', 'inflection', 'convertable-key-model'],
+    install_requires=['fastapi', 'inflection', 'convertable-key-model'],
     packages=find_packages(exclude=['service', 'tests']),
     keywords=['jogakdal', 'standard', 'API', 'response', 'helper', 'pydantic'],
     python_requires='>=3.6',
