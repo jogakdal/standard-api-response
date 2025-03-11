@@ -5,39 +5,72 @@
 #    pip-compile --output-file=requirements.txt requirements.in
 #
 advanced-python-singleton==1.3.2
-    # via -r requirements.in
+    # via convertable-key-model
 annotated-types==0.7.0
     # via pydantic
-anyio==3.7.1
+anyio==4.8.0
     # via
-    #   fastapi
+    #   httpx
     #   starlette
+certifi==2025.1.31
+    # via
+    #   httpcore
+    #   httpx
 click==8.1.8
     # via uvicorn
+convertable-key-model==1.0.3
+    # via -r requirements.in
 exceptiongroup==1.2.2
-    # via anyio
+    # via
+    #   anyio
+    #   pytest
 expiringdict==1.2.2
     # via advanced-python-singleton
-fastapi==0.103.2
-    # via -r requirements.in
-h11==0.14.0
-    # via uvicorn
-idna==3.10
-    # via anyio
-inflection==0.5.1
-    # via -r requirements.in
-pydantic==2.6.4
+fastapi==0.115.11
     # via
     #   -r requirements.in
+    #   convertable-key-model
+h11==0.14.0
+    # via
+    #   httpcore
+    #   uvicorn
+httpcore==1.0.7
+    # via httpx
+httpx==0.28.1
+    # via -r requirements.in
+idna==3.10
+    # via
+    #   anyio
+    #   httpx
+inflection==0.5.1
+    # via convertable-key-model
+iniconfig==2.0.0
+    # via pytest
+packaging==24.2
+    # via pytest
+pluggy==1.5.0
+    # via pytest
+pydantic==2.10.6
+    # via
+    #   convertable-key-model
     #   fastapi
-pydantic-core==2.16.3
+pydantic-core==2.27.2
     # via pydantic
+pytest==8.3.5
+    # via
+    #   -r requirements.in
+    #   pytest-asyncio
+pytest-asyncio==0.25.3
+    # via -r requirements.in
 sniffio==1.3.1
     # via anyio
-starlette==0.27.0
+starlette==0.46.1
     # via fastapi
+tomli==2.2.1
+    # via pytest
 typing-extensions==4.12.2
     # via
+    #   anyio
     #   fastapi
     #   pydantic
     #   pydantic-core

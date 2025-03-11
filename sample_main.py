@@ -1,15 +1,13 @@
 import uvicorn
+from convertable_key_model import ConvertableKeyModel
+from convertable_key_model import to_camel, CaseConvention, ResponseKeyConverter
 from fastapi import FastAPI
 from fastapi.params import Query, Path
 
-from convertable_key_model.convertable_key_model.convertable_key_model import ConvertableKeyModel
-from convertable_key_model.convertable_key_model.convertable_key_model import to_camel, CaseConvention, \
-    ResponseKeyConverter
 from src.service.sample_service import SampleService, SampleItem
-from standard_api_response.standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, \
-    Items, PageableList
+from standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, PageableList
 
-app = FastAPI()
+sample_app = FastAPI()
 
 class Profile(ConvertableKeyModel):
     age: int
@@ -20,7 +18,7 @@ class User(ConvertableKeyModel):
     email: str
     profile: Profile
 
-@app.get("/key_convert")
+@sample_app.get("/key_convert")
 def get_user():
     alias_map = {
         "id": "user_id",
@@ -37,7 +35,7 @@ def get_user():
         case_convention=CaseConvention.CAMEL
     ).convert_key()
 
-@app.get('/item')
+@sample_app.get('/item')
 async def sample_item():
     def __lambda():
         payload = sample_service.get_item()
@@ -48,7 +46,7 @@ async def sample_item():
     return result
 
 
-@app.get('/page_list/{page}')
+@sample_app.get('/page_list/{page}')
 async def sample_page_list(
     page: int = Path(description='페이지 번호, 0인 경우 모든 데이터 반환', ge=0),
     page_size: int = Query(default=10, description='페이지 당 아이템 수', ge=1),
@@ -75,7 +73,7 @@ async def sample_page_list(
     return result
 
 
-@app.get('/page_only/{page}')
+@sample_app.get('/page_only/{page}')
 async def sample_page_only(
     page: int = Path(description='페이지 번호, 0인 경우 모든 데이터 반환', ge=0),
     page_size: int = Query(default=10, description='페이지 당 아이템 수', ge=1),
@@ -88,7 +86,7 @@ async def sample_page_only(
     return StandardResponse.build(callback=__lambda)
 
 
-@app.get('/more_list/{start_index}')
+@sample_app.get('/more_list/{start_index}')
 async def sample_incremental_list(
     start_index: int = Path(description='시작 인덱스', ge=0),
     how_many: int = Query(default=10, description='한 번에 가져올 아이템 수', ge=1),
@@ -101,7 +99,7 @@ async def sample_incremental_list(
     return StandardResponse.build(callback=__lambda)
 
 
-@app.get('/more_list_by_key/{start_key}')
+@sample_app.get('/more_list_by_key/{start_key}')
 async def sample_incremental_by_key_list(
     start_key: str = Path(description='시작 키'),
     how_many: int = Query(default=10, description='한 번에 가져올 아이템 수', ge=1),
@@ -116,7 +114,7 @@ async def sample_incremental_by_key_list(
 
 if __name__ == '__main__':
     uvicorn.run(
-        app="main:app",
+        app="main:sample_app",
         host='127.0.0.1',
         port=5010,
         reload=True,

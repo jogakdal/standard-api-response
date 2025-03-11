@@ -2,17 +2,17 @@ import http
 import json
 
 import pytest
-from fastapi.testclient import TestClient
+from convertable_key_model import ConvertableKeyModel, CaseConvention, ResponseKeyConverter
+from starlette.testclient import TestClient
 
-import main
-from convertable_key_model.convertable_key_model.convertable_key_model import ConvertableKeyModel, CaseConvention, ResponseKeyConverter
 from src.service.sample_service import SampleService, SampleItem, SamplePageListPayload, SamplePayload, \
     SampleIncrementalListPayload
-from standard_api_response.standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, \
+from standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, \
     PageableList, IncrementalList
-from standard_api_response.standard_api_response.standard_response_mapper import StdResponseMapper
+from standard_api_response.standard_response_mapper import StdResponseMapper
+from sample_main import sample_app
 
-client = TestClient(main.app)
+client = TestClient(sample_app)
 
 def print_pretty_json(data):
     print(json.dumps(data, indent=2, ensure_ascii=False))

@@ -4,17 +4,17 @@ with open("readme.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='convertable-key-model',
-    version='1.0.2',
+    name='standard-api-response',
+    version='1.3.4',
     author='황용호',
     author_email='jogakdal@gmail.com',
-    description='ConvertableKeyModel: Dynamic key conversion for Pydantic models',
+    description='Standard API response helper package',
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/jogakdal/standard-api-response',
-    install_requires=['pydantic', 'fastapi', 'inflection', 'advanced-python-singleton'],
-    packages=find_packages(exclude=[]),
-    keywords=['jogakdal', 'standard', 'API', 'response', 'helper', 'pydantic', 'convert', 'key'],
+    install_requires=['pydantic', 'fastapi', 'inflection', 'convertable-key-model'],
+    packages=find_packages(exclude=['service', 'tests']),
+    keywords=['jogakdal', 'standard', 'API', 'response', 'helper', 'pydantic'],
     python_requires='>=3.6',
     classifiers=[
         'Programming Language :: Python :: 3',

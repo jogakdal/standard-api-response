@@ -4,8 +4,7 @@ from typing import Type, Dict, Optional
 
 from advanced_python_singleton.singleton import Singleton
 
-from standard_api_response.standard_api_response.standard_response import PageableList, IncrementalList, P
-from standard_api_response.standard_api_response.standard_response import _BaseList, StandardResponse
+from standard_api_response.standard_response import PageableList, IncrementalList, P, _BaseList, StandardResponse
 
 
 class StdResponseMapper(metaclass=Singleton):

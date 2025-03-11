@@ -1,7 +1,6 @@
 uvicorn
 httpx
-pydantic~=2.6.1
-fastapi~=0.103.0
-inflection
-advanced-python-singleton
+fastapi
 pytest
+pytest-asyncio
+convertable-key-model
