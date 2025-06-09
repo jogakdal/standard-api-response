@@ -71,7 +71,7 @@ async def sample_item():
 ### `ErrorPayload`
 오류 페이로드를 나타냅니다.
 - **속성:**
-  - `errors` List[ErrorPayloadItem]: 오류 리스트.
+  - `errors` (List[ErrorPayloadItem]): 오류 리스트.
   - `appendix` (Optional[dict]): 추가 정보.
 - **메서드:**
   - `add_error(code: str, message: str)`: 
