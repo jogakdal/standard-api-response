@@ -40,7 +40,7 @@ pip install -r requirements.txt
 
 - **메서드:**
   - `build(payload=None, callback=None, status=None, version=None)`: 
-    - 응답 데이터, 에러 코드, API 버전을 이용하여 표준 응답 객체(StandardResponse)를 생성합니다.
+    - 응답 데이터, 응답 상태, API 버전을 이용하여 표준 응답 객체(StandardResponse)를 생성합니다.
     - payload가 None인 경우 callback 함수를 이용하여 payload를 생성합니다.
     - duration 자동 계산을 하려면 callback 함수를 이용하여 payload를 생성해야 합니다.
     - callback 함수는 payload, status, version을 반환해야 합니다.
