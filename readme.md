@@ -43,8 +43,8 @@ pip install -r requirements.txt
     - 응답 데이터, 에러 코드, API 버전을 이용하여 표준 응답 객체(StandardResponse)를 생성합니다.
     - payload가 None인 경우 callback 함수를 이용하여 payload를 생성합니다.
     - duration 자동 계산을 하려면 callback 함수를 이용하여 payload를 생성해야 합니다.
-    - callback 함수는 payload, error_code, version을 반환해야 합니다.
-    - callback 함수가 반환한 error_code가 None이 아니면 StandardResponse 객체의 code 필드에 지정됩니다.
+    - callback 함수는 payload, status, version을 반환해야 합니다.
+    - callback 함수가 반환한 status가 None이 아니면 StandardResponse 객체의 status 필드에 지정됩니다.
     - callback 함수가 반환한 version이 None이 아니면 StandardResponse 객체의 version 필드에 지정됩니다.
     - 이는 페이로드 생성 중 발생할 수 있는 오류 코드를 StandardResponse 객체에 반영하기 위함입니다.
 - **사용 예:**
