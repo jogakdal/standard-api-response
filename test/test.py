@@ -5,12 +5,12 @@ import pytest
 from convertable_key_model import ConvertableKeyModel, CaseConvention, ResponseKeyConverter
 from starlette.testclient import TestClient
 
+from sample_main import sample_app
 from src.service.sample_service import SampleService, SampleItem, SamplePageListPayload, SamplePayload, \
     SampleIncrementalListPayload
 from standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, \
-    PageableList, IncrementalList
+    PageableList, IncrementalList, PayloadStatus, ErrorPayload
 from standard_api_response.standard_response_mapper import StdResponseMapper
-from sample_main import sample_app
 
 client = TestClient(sample_app)
 
@@ -246,7 +246,7 @@ def test_with_standard_response_class():
     ResponseKeyConverter().set_default_case_convention(CaseConvention.CAMEL)
 
     mapper = StdResponseMapper(response_json, SamplePageListPayload)
-    assert mapper.response.code == 200
+    assert mapper.response.status == PayloadStatus.SUCCESS
     assert mapper.response.payload.pageable.page.size == 5
     assert isinstance(mapper.response.payload, SamplePageListPayload)
     assert isinstance(mapper.response.payload.pageable, PageableList)
@@ -301,19 +301,35 @@ async def test_convert_key():
 
 @pytest.mark.asyncio
 async def test_sample_item():
-    response = client.get('/item')
+    response = client.get('/item/sample/0')
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     print_pretty_json(json)
 
     # response_object = StdResponseMapper.map_standard_response(json, SamplePayload)
     mapper = StdResponseMapper(json, SamplePayload)
-    assert mapper.response.code == 200
+    assert mapper.response.status == PayloadStatus.SUCCESS
     assert isinstance(mapper.response.payload, SamplePayload)
     assert mapper.response.payload.value_1 == 'sample'
     assert mapper.response.payload.value_2 == 0
+
+    response = client.get('/item/error/0')
+    assert response.status_code == http.HTTPStatus.OK
+    json = response.json()
+    assert json['status'] == PayloadStatus.FAIL
+
+    print_pretty_json(json)
+
+    mapper = StdResponseMapper(json, ErrorPayload)
+    assert mapper.response.status == PayloadStatus.FAIL
+    assert isinstance(mapper.response.payload, ErrorPayload)
+    assert mapper.response.payload.errors[0].code == 'E_INVALID_INPUT'
+    assert mapper.response.payload.errors[0].message == 'Invalid input parameters'
+    assert mapper.response.payload.appendix['value_1'] == 'error'
+    assert mapper.response.payload.appendix['value_2'] == 0
+
 
 @pytest.mark.asyncio
 async def test_page_list():
@@ -326,7 +342,7 @@ async def test_page_list():
 
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     print('\ntest_page_list:')
     print_pretty_json(json)
@@ -341,7 +357,7 @@ async def test_page_list():
     ResponseKeyConverter().set_default_case_convention(CaseConvention.CAMEL)
 
     mapper = StdResponseMapper(json, SamplePageListPayload)
-    assert mapper.response.code == 200
+    assert mapper.response.status == PayloadStatus.SUCCESS
     assert mapper.response.payload.pageable.page.size == 5
     assert isinstance(mapper.response.payload, SamplePageListPayload)
     assert isinstance(mapper.response.payload.pageable, PageableList)
@@ -390,10 +406,10 @@ async def test_page_only():
 
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     mapper = StdResponseMapper(json, PageableList[SampleItem])
-    assert mapper.response.code == 200
+    assert mapper.response.status == PayloadStatus.SUCCESS
     assert isinstance(mapper.response.payload, PageableList)
     assert isinstance(mapper.response.payload.items, Items)
     assert isinstance(mapper.response.payload.items.list[0], SampleItem)
@@ -416,11 +432,11 @@ async def test_more_list():
 
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     # response_object = StdResponseMapper.map_standard_response(json, SampleIncrementalListPayload)
     mapper = StdResponseMapper(json, SampleIncrementalListPayload)
-    assert mapper.response.code == 200
+    assert mapper.response.status == PayloadStatus.SUCCESS
     assert isinstance(mapper.response.payload, SampleIncrementalListPayload)
     assert isinstance(mapper.response.payload.incremental, IncrementalList)
     assert isinstance(mapper.response.payload.incremental.items, Items)
@@ -461,7 +477,7 @@ async def test_more_list():
     )
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     # json 직접 조회도 당연히 가능
     assert json['payload']['incremental']['cursor']['start'] == 97
@@ -478,10 +494,10 @@ async def test_more_list():
     )
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     response_object = StdResponseMapper.map_standard_response(json, SampleIncrementalListPayload)
-    assert response_object.code == 200
+    assert response_object.status == PayloadStatus.SUCCESS
     assert response_object.payload.incremental.cursor.start == 100
     assert response_object.payload.incremental.cursor.end == None
     assert response_object.payload.incremental.cursor.expandable == False
@@ -502,7 +518,7 @@ async def test_more_list_by_key():
     json = response.json()
 
     response_object = StdResponseMapper.map_standard_response(json, SampleIncrementalListPayload)
-    assert response_object.code == 200
+    assert response_object.status == PayloadStatus.SUCCESS
     assert isinstance(response_object.payload, SampleIncrementalListPayload)
     assert isinstance(response_object.payload.incremental, IncrementalList)
     assert isinstance(response_object.payload.incremental.items, Items)
@@ -543,7 +559,7 @@ async def test_more_list_by_key():
     )
     assert response.status_code == http.HTTPStatus.OK
     json = response.json()
-    assert json['code'] == 200
+    assert json['status'] == PayloadStatus.SUCCESS
 
     lists = StdResponseMapper.auto_map_list(json.get('payload'), SampleItem)
     assert len(lists) == 1

@@ -1,18 +1,39 @@
 from __future__ import annotations
 
-import http
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TypeVar, Optional, Generic, Any, Union, List
 
 from convertable_key_model import ConvertableKeyModel
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 
 from standard_api_response.exception import KeyNotFoundError
 from standard_api_response.time_utility import time_diff
 
 P = TypeVar('P', bound=BaseModel)
 I = TypeVar('I', bound=BaseModel)
+
+
+class PayloadStatus(Enum):
+    UNKNOWN = ''
+    SUCCESS = 'success'
+    FAIL = 'failure'
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.value.lower() == other.lower()
+        return super().__eq__(other)
+
+    def __str__(self):
+        return self.value
+
+    @staticmethod
+    def from_string(text):
+        for name, member in PayloadStatus.__members__.items():
+            if text.lower() == member.value.lower():
+                return PayloadStatus[name]
+
+        return PayloadStatus.UNKNOWN
 
 
 class OrderDirection(Enum):
@@ -115,7 +136,6 @@ class PageableList(_BaseList, Generic[I]):
 
     page: PageInfo  # 페이지 정보
 
-
     # 전체 아이템 수, 페이지 당 아이템 수, 현재 페이지 번호, 아이템 리스트, 정렬 정보를 이용하여 PageableList 객체 생성
     # page_size가 0 이하인 경우 1로 변환
     # page, items 정보는 자동 생성
@@ -208,9 +228,37 @@ class IncrementalList(_BaseList, Generic[I]):
         )
 
 
-class ErrorPayload(ConvertableKeyModel):
+class ErrorPayloadItem(ConvertableKeyModel):
+    """
+    에러 페이로드 아이템
+    payload.errors의 요소
+    """
+
+    code: str  # 에러 코드
     message: str  # 에러 메시지
-    appendix: Optional[dict] = {}  # 추가 정보
+
+
+class ErrorPayload(ConvertableKeyModel):
+    errors: List[ErrorPayloadItem]  # 에러 정보
+    appendix: Optional[dict] = Field(default_factory=dict)  # 추가 정보
+
+    @staticmethod
+    def build(code, message, appendix=None) -> 'ErrorPayload':
+        if appendix is None:
+            appendix = {}
+
+        return ErrorPayload(
+            errors=[ErrorPayloadItem(code=code, message=message)],
+            appendix=appendix
+        )
+
+    def add_error(self, code: str, message: str):
+        self.errors.append(ErrorPayloadItem(code=code, message=message))
+
+    def add_appendix(self, key: str, value: Any):
+        if self.appendix is None:
+            self.appendix = {}
+        self.appendix[key] = value
 
 
 class StandardResponse(ConvertableKeyModel):
@@ -218,7 +266,7 @@ class StandardResponse(ConvertableKeyModel):
     표준 응답 객체
     """
 
-    code: int  # 응답 코드
+    status: Optional[PayloadStatus] = PayloadStatus.SUCCESS  # payload의 상태(optional)>
     version: str  # API 버전
     datetime: datetime  # 응답 시각
     duration: Union[int, float]  # 처리 시간 (ms)
@@ -227,27 +275,27 @@ class StandardResponse(ConvertableKeyModel):
     # 응답 데이터, 에러 코드, API 버전을 이용하여 표준 응답 객체 생성
     # payload가 None인 경우 callback 함수를 이용하여 payload를 생성
     # duration 자동 계산을 하려면 callback 함수를 이용하여 payload를 생성해야 한다.
-    # callback 함수는 payload, error_code, version을 반환해야 한다.
-    # callback 함수가 반환한 error_code가 None이 아니면 StandardResponse 객체의 code 필드에 지정된다.
+    # callback 함수는 payload, status, version을 반환해야 한다.
+    # callback 함수가 반환한 error_code가 None이 아니면 StandardResponse 객체의 status 필드에 지정된다.
     # callback 함수가 반환한 version이 None이 아니면 StandardResponse 객체의 version 필드에 지정된다.
     # 이는 페이로드 생성 중 발생할 수 있는 오류 코드를 StandardResponse 객체에 반영하기 위함이다.
     @staticmethod
-    def build(payload=None, callback=None, error_code=None, version=None) -> StandardResponse:
+    def build(payload=None, callback=None, status=None, version=None) -> StandardResponse:
         _create_time = datetime.now(tz=timezone.utc)
 
         try:
             if payload is None:
                 if callable(callback):
-                    payload, _error_code, _version = callback()
-                    if _error_code is not None:
-                        error_code = _error_code
+                    payload, _status, _version = callback()
+                    if _status is not None:
+                        status = _status
                     if _version is not None:
                         version = _version
 
             _response_time = datetime.now(tz=timezone.utc)
 
             return StandardResponse(
-                code=http.HTTPStatus.OK if error_code is None else error_code,
+                status=PayloadStatus.SUCCESS if status is None else status,
                 version='1.0' if version is None else version,
                 datetime=_response_time,
                 duration=time_diff(_create_time, _response_time),
@@ -262,7 +310,7 @@ class StandardResponse(ConvertableKeyModel):
     def build_from_response(response: dict) -> StandardResponse:
         try:
             return StandardResponse(
-                code=response.get('code', http.HTTPStatus.OK),
+                status=response.get('status', PayloadStatus.SUCCESS),
                 version=response.get('version', '1.0'),
                 datetime=response.get('datetime', datetime.now(tz=timezone.utc)),
                 duration=response.get('duration', 0),

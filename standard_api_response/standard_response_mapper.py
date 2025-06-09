@@ -1,10 +1,10 @@
-import http
 from datetime import datetime, timezone
 from typing import Type, Dict, Optional
 
 from advanced_python_singleton.singleton import Singleton
 
-from standard_api_response.standard_response import PageableList, IncrementalList, P, _BaseList, StandardResponse
+from standard_api_response.standard_response import PageableList, IncrementalList, P, _BaseList, StandardResponse, \
+    PayloadStatus
 
 
 class StdResponseMapper(metaclass=Singleton):
@@ -78,7 +78,7 @@ class StdResponseMapper(metaclass=Singleton):
     @staticmethod
     def map_standard_response(json: dict, payload_type: Type[P]) -> StandardResponse:
         return StandardResponse(
-            code=json.get('code', http.HTTPStatus.OK),
+            status=json.get('status', PayloadStatus.SUCCESS),
             version=json.get('version', '1.0'),
             datetime=json.get('datetime', datetime.now(tz=timezone.utc)),
             duration=json.get('duration', 0),

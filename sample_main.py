@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from fastapi.params import Query, Path
 
 from src.service.sample_service import SampleService, SampleItem
-from standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, PageableList
+from standard_api_response.standard_response import StandardResponse, PageInfo, OrderInfo, Items, PageableList, \
+    PayloadStatus, ErrorPayload
 
 sample_app = FastAPI()
 
@@ -35,11 +36,14 @@ def get_user():
         case_convention=CaseConvention.CAMEL
     ).convert_key()
 
-@sample_app.get('/item')
-async def sample_item():
+@sample_app.get('/item/{value1}/{value2}')
+async def sample_item(
+        value1: str = Path(description='첫 번째 값'),
+        value2: int = Path(description='두 번째 값')
+):
     def __lambda():
-        payload = sample_service.get_item()
-        return payload, None, None
+        payload = sample_service.get_item(value_1=value1, value_2=value2)
+        return payload, PayloadStatus.FAIL if isinstance(payload, ErrorPayload) else None, None
 
     sample_service = SampleService()
     result = StandardResponse.build(callback=__lambda).convert_key()

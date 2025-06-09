@@ -13,7 +13,7 @@
 
 표준 API 스펙은 다음 링크에 정의되어 있습니다.  
 휴넷 임직원: https://ihunet.atlassian.net/wiki/spaces/KUDOS/pages/3783786517/API+specification+V1.2  
-일반 사용자: https://blog.naver.com/jogakdal/223735823580
+일반 사용자: https://velog.io/@jogakdal/standard-api-specification
 
 ## 설치
 ```bash
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 ### `StandardResponse`
 표준 API 응답을 구성하는 클래스입니다.
 - **속성:**
-  - `code` (int): 응답 코드.
+  - `status` (str): 응답 성공 여부, 'success' 또는 'error'로 지정됩니다.
   - `version` (str): API 버전.
   - `datetime` (datetime): 응답 시각.
   - `duration` (int): 처리 시간 (밀리초).
@@ -62,11 +62,25 @@ async def sample_item():
     return StandardResponse.build(callback=__lambda)
 ```
   
+### `ErrorPayloadItem`
+오류 페이로드의 errors 리스트의 오류 아이템을 구성합니다.
+- **속성:**
+   - `code` (str): 오류 코드.
+   - `message` (str): 오류 메시지.
+  
 ### `ErrorPayload`
 오류 페이로드를 나타냅니다.
 - **속성:**
-  - `message` (str): 오류 메시지.
+  - `errors` List[ErrorPayloadItem]: 오류 리스트.
   - `appendix` (Optional[dict]): 추가 정보.
+- **메서드:**
+  - `add_error(code: str, message: str)`: 
+    - 오류 아이템을 추가합니다.
+  - `build(code, message, appendix: Optional[dict] = None)`:
+    - 단일 오류 아이템으로 오류 페이로드 객체를 생성합니다.
+    - `code`: 오류 코드.
+    - `message`: 오류 메시지.
+    - `appendix`: 추가 정보 (선택 사항).
 
 ### `PageableList`
 페이지 형태의 리스트 응답을 생성할 때 사용합니다.  
@@ -305,56 +319,57 @@ OrderBy의 direction 속성을 지정할 때 사용합니다.
       - 현재 PageableList, IncrementalList 두 타입만 지원합니다.
       - `payload`에 한 개 이상의 리스트가 있을 경우, 모든 리스트를 변환하여 {'<키필드 명>: <객체>} 형태로 반환합니다.
 - **사용 예:**
+
 ```python
 @pytest.mark.asyncio
 async def test_page_list(start_api_server):
-    client = AsyncClient(base_url="http://localhost:5010")
+  client = AsyncClient(base_url="http://localhost:5010")
 
-    response = await client.get(
-        url=f'/page_list/{1}',
-        params={
-            "page_size": 5
-        }
-    )
-    assert response.status_code == http.HTTPStatus.OK
-    json = response.json()
-    assert json['code'] == 200
+  response = await client.get(
+    url=f'/page_list/{1}',
+    params={
+      "page_size": 5
+    }
+  )
+  assert response.status_code == http.HTTPStatus.OK
+  json = response.json()
+  assert json['status'] == PayloadStatus.SUCCESS
 
-    mapper = StdResponseMapper(json, SamplePageListPayload)
-    assert mapper.response.code == 200
-    assert mapper.response.payload.pageable.page.size == 5
-    assert isinstance(mapper.response.payload, SamplePageListPayload)
-    assert isinstance(mapper.response.payload.pageable, PageableList)
-    assert isinstance(mapper.response.payload.pageable.items, Items)
-    assert isinstance(mapper.response.payload.pageable.items.list[0], SampleItem)
-    assert mapper.response.payload.pageable.page.current == 1
-    assert mapper.response.payload.pageable.items.current == 5
-    assert len(mapper.response.payload.pageable.items.list) == 5
-    assert mapper.response.payload.pageable.items.list[0].key == 'key_0'
-    assert mapper.response.payload.pageable.items.list[0].value == 0
+  mapper = StdResponseMapper(json, SamplePageListPayload)
+  assert mapper.response.status == PayloadStatus.SUCCESS
+  assert mapper.response.payload.pageable.page.size == 5
+  assert isinstance(mapper.response.payload, SamplePageListPayload)
+  assert isinstance(mapper.response.payload.pageable, PageableList)
+  assert isinstance(mapper.response.payload.pageable.items, Items)
+  assert isinstance(mapper.response.payload.pageable.items.list[0], SampleItem)
+  assert mapper.response.payload.pageable.page.current == 1
+  assert mapper.response.payload.pageable.items.current == 5
+  assert len(mapper.response.payload.pageable.items.list) == 5
+  assert mapper.response.payload.pageable.items.list[0].key == 'key_0'
+  assert mapper.response.payload.pageable.items.list[0].value == 0
 
-    payload = StdResponseMapper.map_payload(json, SamplePageListPayload)
-    assert isinstance(payload, SamplePageListPayload)
-    assert isinstance(payload.pageable, PageableList)
-    assert isinstance(payload.pageable.items, Items)
-    assert isinstance(payload.pageable.items.list[0], SampleItem)
+  payload = StdResponseMapper.map_payload(json, SamplePageListPayload)
+  assert isinstance(payload, SamplePageListPayload)
+  assert isinstance(payload.pageable, PageableList)
+  assert isinstance(payload.pageable.items, Items)
+  assert isinstance(payload.pageable.items.list[0], SampleItem)
 
-    # pageable = StdResponseMapper().map_list(json.get('payload'), PageableList[SampleItem], 'pageable')
-    pageable = StdResponseMapper.map_pageable_list(json.get('payload'), SampleItem, 'pageable')
+  # pageable = StdResponseMapper().map_list(json.get('payload'), PageableList[SampleItem], 'pageable')
+  pageable = StdResponseMapper.map_pageable_list(json.get('payload'), SampleItem, 'pageable')
 
-    assert isinstance(pageable, PageableList)
-    assert isinstance(pageable.items, Items)
-    assert isinstance(pageable.items.list[0], SampleItem)
-    assert pageable.page.size == 5
-    assert pageable.page.current == 1
-    assert pageable.items.current == 5
-    assert len(pageable.items.list) == 5
+  assert isinstance(pageable, PageableList)
+  assert isinstance(pageable.items, Items)
+  assert isinstance(pageable.items.list[0], SampleItem)
+  assert pageable.page.size == 5
+  assert pageable.page.current == 1
+  assert pageable.items.current == 5
+  assert len(pageable.items.list) == 5
 
-    lists = StdResponseMapper.auto_map_list(json.get('payload'), SampleItem)
-    assert len(lists) == 1
-    assert isinstance(lists['pageable'], PageableList)
-    assert isinstance(lists['pageable'].items, Items)
-    assert isinstance(lists['pageable'].items.list[0], SampleItem)
+  lists = StdResponseMapper.auto_map_list(json.get('payload'), SampleItem)
+  assert len(lists) == 1
+  assert isinstance(lists['pageable'], PageableList)
+  assert isinstance(lists['pageable'].items, Items)
+  assert isinstance(lists['pageable'].items.list[0], SampleItem)
 ```
 
 ## 응답 필드 변환
@@ -363,73 +378,59 @@ async def test_page_list(start_api_server):
 - 상세 설명은 <a href="https://github.com/jogakdal/convertable-key-model">convertable-key-model 모듈 설명서</a>를 참조하십시오.
 
 ## 응답 필드 변환 예제
+
 ```python
 from pydantic import BaseModel
 
+
 class SampleItem(BaseModel):
-    key: str
-    value: int
+  key: str
+  value: int
 
 
 class SamplePageListPayload(ConvertableKeyModel):
-    value_1: str
-    value_2: int
-    pageable: PageableList[SampleItem]
+  value_1: str
+  value_2: int
+  pageable: PageableList[SampleItem]
 
 
 class SampleService:
-    def __init__(self):
-        self.item_list = []
-        for i in range(100):
-            self.item_list.append(SampleItem(key=f'key_{i}', value=i))
+  def __init__(self):
+    self.item_list = []
+    for i in range(100):
+      self.item_list.append(SampleItem(key=f'key_{i}', value=i))
 
-    def get_pageable_list(self, page: int, page_size: int):
-        # page == 0 이면 모든 데이터 반환
-        if page <= 0:
-            page = 1
-            page_size = len(self.item_list)
+  def get_pageable_list(self, page: int, page_size: int):
+    # page == 0 이면 모든 데이터 반환
+    if page <= 0:
+      page = 1
+      page_size = len(self.item_list)
 
-        page_list = PageableList[SampleItem].build(
-            items=self.item_list[(page - 1) * page_size : page * page_size],
-            total_items=len(self.item_list),
-            page_size=page_size,
-            current_page=page,
-            order_info=OrderInfo(sorted=True, by=[OrderBy(field='key', direction=OrderDirection.ASC)]),
-        )
+    page_list = PageableList[SampleItem].build(
+      items=self.item_list[(page - 1) * page_size: page * page_size],
+      total_items=len(self.item_list),
+      page_size=page_size,
+      current_page=page,
+      order_info=OrderInfo(sorted=True, by=[OrderBy(field='key', direction=OrderDirection.ASC)]),
+    )
 
-        payload = SamplePageListPayload(
-            value_1='page_list_sample',
-            value_2=0,
-            pageable=page_list.convert_key(),  # Pydantic에서 custom model에 대한 직렬화를 수행할 때 dict를 사용하므로 dict로 변환
-        )
-        return payload
+    payload = SamplePageListPayload(
+      value_1='page_list_sample',
+      value_2=0,
+      pageable=page_list.convert_key(),  # Pydantic에서 custom model에 대한 직렬화를 수행할 때 dict를 사용하므로 dict로 변환
+    )
+    return payload
+
 
 def test_with_standard_response_class():
-    def make_temporary_response():
-        def __lambda():
-            payload = sample_service.get_pageable_list(page=1, page_size=5)
-            return payload, None, None
+  def make_temporary_response():
+    def __lambda():
+      payload = sample_service.get_pageable_list(page=1, page_size=5)
+      return payload, None, None
 
-        sample_service = SampleService()
+    sample_service = SampleService()
 
-        ResponseKeyConverter().clear()
-        ResponseKeyConverter().add_alias(StandardResponse, 'duration', 'duration_time')
-        ResponseKeyConverter().add_alias(PageInfo, 'current', 'current_page')
-        ResponseKeyConverter().add_alias(PageInfo, 'size', 'page_size')
-        ResponseKeyConverter().add_alias(PageInfo, 'total', 'total_pages')
-        ResponseKeyConverter().add_alias(OrderInfo, 'by', 'order_by')
-        ResponseKeyConverter().add_alias(Items[SampleItem], 'current', 'current_page')
-        ResponseKeyConverter().add_alias(PageableList[SampleItem], 'page', 'page_info')
-        ResponseKeyConverter().set_default_case_convention(CaseConvention.CAMEL)
-
-        result = StandardResponse.build(callback=__lambda)
-        result = result.convert_key()
-        ResponseKeyConverter().clear()
-        return result
-
-    response_json = make_temporary_response()
-    print(json.dumps(response_json, indent=2, ensure_ascii=False))
-
+    ResponseKeyConverter().clear()
     ResponseKeyConverter().add_alias(StandardResponse, 'duration', 'duration_time')
     ResponseKeyConverter().add_alias(PageInfo, 'current', 'current_page')
     ResponseKeyConverter().add_alias(PageInfo, 'size', 'page_size')
@@ -439,43 +440,60 @@ def test_with_standard_response_class():
     ResponseKeyConverter().add_alias(PageableList[SampleItem], 'page', 'page_info')
     ResponseKeyConverter().set_default_case_convention(CaseConvention.CAMEL)
 
-    mapper = StdResponseMapper(response_json, SamplePageListPayload)
-    assert mapper.response.code == 200
-    assert mapper.response.payload.pageable.page.size == 5
-    assert isinstance(mapper.response.payload, SamplePageListPayload)
-    assert isinstance(mapper.response.payload.pageable, PageableList)
-    assert isinstance(mapper.response.payload.pageable.items, Items)
-    assert isinstance(mapper.response.payload.pageable.items.list[0], SampleItem)
-    assert mapper.response.payload.pageable.page.current == 1
-    assert mapper.response.payload.pageable.items.current == 5
-    assert len(mapper.response.payload.pageable.items.list) == 5
-    assert mapper.response.payload.pageable.items.list[0].key == 'key_0'
-    assert mapper.response.payload.pageable.items.list[0].value == 0
-
-    payload = StdResponseMapper.map_payload(response_json, SamplePageListPayload)
-    assert isinstance(payload, SamplePageListPayload)
-    assert isinstance(payload.pageable, PageableList)
-    assert isinstance(payload.pageable.items, Items)
-    assert isinstance(payload.pageable.items.list[0], SampleItem)
-
-    # pageable = StdResponseMapper().map_list(json.get('payload'), PageableList[SampleItem], 'pageable')
-    pageable = StdResponseMapper.map_pageable_list(response_json.get('payload'), SampleItem, 'pageable')
-
-    assert isinstance(pageable, PageableList)
-    assert isinstance(pageable.items, Items)
-    assert isinstance(pageable.items.list[0], SampleItem)
-    assert pageable.page.size == 5
-    assert pageable.page.current == 1
-    assert pageable.items.current == 5
-    assert len(pageable.items.list) == 5
-
-    lists = StdResponseMapper.auto_map_list(response_json.get('payload'), SampleItem)
-    assert len(lists) == 1
-    assert isinstance(lists['pageable'], PageableList)
-    assert isinstance(lists['pageable'].items, Items)
-    assert isinstance(lists['pageable'].items.list[0], SampleItem)
-
+    result = StandardResponse.build(callback=__lambda)
+    result = result.convert_key()
     ResponseKeyConverter().clear()
+    return result
+
+  response_json = make_temporary_response()
+  print(json.dumps(response_json, indent=2, ensure_ascii=False))
+
+  ResponseKeyConverter().add_alias(StandardResponse, 'duration', 'duration_time')
+  ResponseKeyConverter().add_alias(PageInfo, 'current', 'current_page')
+  ResponseKeyConverter().add_alias(PageInfo, 'size', 'page_size')
+  ResponseKeyConverter().add_alias(PageInfo, 'total', 'total_pages')
+  ResponseKeyConverter().add_alias(OrderInfo, 'by', 'order_by')
+  ResponseKeyConverter().add_alias(Items[SampleItem], 'current', 'current_page')
+  ResponseKeyConverter().add_alias(PageableList[SampleItem], 'page', 'page_info')
+  ResponseKeyConverter().set_default_case_convention(CaseConvention.CAMEL)
+
+  mapper = StdResponseMapper(response_json, SamplePageListPayload)
+  assert mapper.response.status == PayloadStatus.SUCCESS
+  assert mapper.response.payload.pageable.page.size == 5
+  assert isinstance(mapper.response.payload, SamplePageListPayload)
+  assert isinstance(mapper.response.payload.pageable, PageableList)
+  assert isinstance(mapper.response.payload.pageable.items, Items)
+  assert isinstance(mapper.response.payload.pageable.items.list[0], SampleItem)
+  assert mapper.response.payload.pageable.page.current == 1
+  assert mapper.response.payload.pageable.items.current == 5
+  assert len(mapper.response.payload.pageable.items.list) == 5
+  assert mapper.response.payload.pageable.items.list[0].key == 'key_0'
+  assert mapper.response.payload.pageable.items.list[0].value == 0
+
+  payload = StdResponseMapper.map_payload(response_json, SamplePageListPayload)
+  assert isinstance(payload, SamplePageListPayload)
+  assert isinstance(payload.pageable, PageableList)
+  assert isinstance(payload.pageable.items, Items)
+  assert isinstance(payload.pageable.items.list[0], SampleItem)
+
+  # pageable = StdResponseMapper().map_list(json.get('payload'), PageableList[SampleItem], 'pageable')
+  pageable = StdResponseMapper.map_pageable_list(response_json.get('payload'), SampleItem, 'pageable')
+
+  assert isinstance(pageable, PageableList)
+  assert isinstance(pageable.items, Items)
+  assert isinstance(pageable.items.list[0], SampleItem)
+  assert pageable.page.size == 5
+  assert pageable.page.current == 1
+  assert pageable.items.current == 5
+  assert len(pageable.items.list) == 5
+
+  lists = StdResponseMapper.auto_map_list(response_json.get('payload'), SampleItem)
+  assert len(lists) == 1
+  assert isinstance(lists['pageable'], PageableList)
+  assert isinstance(lists['pageable'].items, Items)
+  assert isinstance(lists['pageable'].items.list[0], SampleItem)
+
+  ResponseKeyConverter().clear()
 ```
 
 ## 라이선스

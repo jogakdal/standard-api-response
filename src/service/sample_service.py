@@ -2,7 +2,7 @@ from convertable_key_model import ConvertableKeyModel, CaseConvention
 from pydantic import BaseModel
 
 from standard_api_response.standard_response import PageableList, IncrementalList, OrderInfo, OrderBy, OrderDirection, \
-    CursorInfo, Items
+    CursorInfo, Items, ErrorPayload
 
 
 class SamplePayload(ConvertableKeyModel):
@@ -33,9 +33,15 @@ class SampleService:
         for i in range(100):
             self.item_list.append(SampleItem(key=f'key_{i}', value=i))
 
-    def get_item(self):
-        # return SamplePayload(value_1='sample', value_2=0, case_convention=CaseConvention.SNAKE)
-        return SamplePayload(value_1='sample', value_2=0, case_convention=CaseConvention.CAMEL)
+    def get_item(self, value_1: str, value_2: int):
+        if value_1 is None or value_1 == '' or value_1.lower() == 'error':
+            return ErrorPayload.build(
+                code="E_INVALID_INPUT",
+                message="Invalid input parameters",
+                appendix={"value_1": value_1, "value_2": value_2}
+            )
+
+        return SamplePayload(value_1=value_1, value_2=value_2, case_convention=CaseConvention.CAMEL)
 
     def get_pageable_list(self, page: int, page_size: int):
         # page == 0 이면 모든 데이터 반환
